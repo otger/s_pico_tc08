@@ -18,7 +18,7 @@ All rights reserved.
 class EntropyPicoTc08(Module):
     name = 'picotc08'
 
-    def __init__(self, dealer, name=None, channels=list(range(8))):
+    def __init__(self, dealer, name=None, channels=list(range(9))):
         Module.__init__(self, name=name, dealer=dealer)
         self.tc = ThermoCouples(channels=channels)
         self._timer = None
@@ -54,7 +54,7 @@ class EntropyPicoTc08(Module):
 
 
 class ThermoCouples(object):
-    def __init__(self, channels=list(range(8)), units=UNITS.TEMPERATURE.KELVIN,
+    def __init__(self, channels=list(range(9)), units=UNITS.TEMPERATURE.KELVIN,
                  tc_type=THERMOCOUPLES.T):
         self.channels = channels
         self._units = units
@@ -83,7 +83,7 @@ class ThermoCouples(object):
         if channel in self.channels:
             self.channels.pop(self.channels.index(channel))
 
-    def get_value(self,channel):
+    def get_value(self, channel):
         tc = self.tc_factory.getModule(channel)
         return tc.getSingleValue()
 
