@@ -1,13 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+import threading
 from entropyfw import Module
 from PicoController import ControllerTC08
 from PicoController.common.tools import ThermoCoupleModifier, UnitsModifier
 from PicoController.common.definitions import THERMOCOUPLES, UNITS
 from PicoController.common.definitions import MODULES_AVAILABLE
 
-
+from .actions import StartTimer, EnableChannel, StopTimer
 """
 module
 Created by otger on 23/03/17.
@@ -21,9 +21,36 @@ class EntropyPicoTc08(Module):
     def __init__(self, dealer, name=None, channels=list(range(8))):
         Module.__init__(self, name=name, dealer=dealer)
         self.tc = ThermoCouples(channels=channels)
+        self._timer = None
+        self.interval = None
+        self._l = threading.Lock()
+        self.register_action(StartTimer)
+        self.register_action(StopTimer)
+        self.register_action(EnableChannel)
+
+    def exit(self):
+        self.tc.close()
 
     def enable(self, channel):
         self.tc.enable(channel)
+
+    def _timer_func(self):
+        values = self.tc.get_channels_values()
+        self.pub_event('temperatures', values)
+        self._timer = threading.Timer(self.interval, self._timer_func)
+        self._timer.start()
+
+    def start_timer(self, interval):
+        with self._l:
+            self.interval = interval
+            if self._timer is None:
+                self._timer_func()
+
+    def stop_timer(self):
+        with self._l:
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
 
 
 class ThermoCouples(object):
@@ -50,7 +77,7 @@ class ThermoCouples(object):
         if channel not in self.channels:
             self.channels.append(channel)
             self.channels.sort()
-        self.enable(channel, tc_type, units)
+        self._config(channel, tc_type, units)
 
     def disable(self, channel):
         if channel in self.channels:
@@ -68,8 +95,8 @@ class ThermoCouples(object):
         return ch.getProperties().pollinterval
 
     def get_channels_values(self):
-        values = []
+        values = {}
         for x in self.channels:
-           values.append(self.get_value(x))
+            values['channel_{0}'.format(x)] = self.get_value(x)
         return values
 
