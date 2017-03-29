@@ -110,4 +110,4 @@ class ReadChannels(ModuleResource):
 
 
 def get_api_resources():
-    return [StartTempLoop, StopTempLoop, EnableChannel, ReadChannels]
+    return [StartTempLoop, StopTempLoop, EnableChannel, DisableChannel, ReadChannels]

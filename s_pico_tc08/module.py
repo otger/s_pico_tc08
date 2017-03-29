@@ -37,7 +37,10 @@ class EntropyPicoTc08(Module):
         self.tc.close()
 
     def enable(self, channel, tc_type=None, units=None):
-        self.tc.enable(channel)
+        self.tc.enable(channel, tc_type, units)
+
+    def disable(self, channel):
+        self.tc.disable(channel)
 
     def _timer_func(self):
         values = self.tc.get_channels_values()
