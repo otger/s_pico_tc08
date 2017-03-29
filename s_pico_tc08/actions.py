@@ -10,9 +10,9 @@ All rights reserved.
 from entropyfw import Action
 
 
-class StartTimer(Action):
-    name = 'starttimer'
-    arguments = [('interval', int)]
+class StartTempLoop(Action):
+    name = 'start_temp_loop'
+    arguments = [('interval', float)]
     description = "Starts to publish temperatures of specified channels"
     version = "0.1"
 
@@ -21,8 +21,8 @@ class StartTimer(Action):
         self.module.start_timer(interval)
 
 
-class StopTimer(Action):
-    name = 'stoptimer'
+class StopTempLoop(Action):
+    name = 'stop_temp_loop'
     arguments = []
     description = "Stops publishing temperatures"
     version = "0.1"
@@ -32,7 +32,7 @@ class StopTimer(Action):
 
 
 class EnableChannel(Action):
-    name = 'enablechannel'
+    name = 'enable_channel'
     arguments = [('channel', int)]
     description = "Enables a channel of TC08"
     version = "0.1"

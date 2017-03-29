@@ -2,12 +2,15 @@
 # -*- coding: utf-8 -*-
 import threading
 from entropyfw import Module
+from entropyfw.common import get_utc_ts
 from PicoController import ControllerTC08
 from PicoController.common.tools import ThermoCoupleModifier, UnitsModifier
 from PicoController.common.definitions import THERMOCOUPLES, UNITS
 from PicoController.common.definitions import MODULES_AVAILABLE
 
-from .actions import StartTimer, EnableChannel, StopTimer
+from .actions import StartTempLoop, EnableChannel, StopTempLoop
+from .web.api.resources import get_api_resources
+
 """
 module
 Created by otger on 23/03/17.
@@ -18,20 +21,22 @@ All rights reserved.
 class EntropyPicoTc08(Module):
     name = 'picotc08'
 
-    def __init__(self, dealer, name=None, channels=list(range(9))):
-        Module.__init__(self, name=name, dealer=dealer)
+    def __init__(self, name=None, channels=list(range(9))):
+        Module.__init__(self, name=name)
         self.tc = ThermoCouples(channels=channels)
         self._timer = None
         self.interval = None
         self._l = threading.Lock()
-        self.register_action(StartTimer)
-        self.register_action(StopTimer)
+        self.register_action(StartTempLoop)
+        self.register_action(StopTempLoop)
         self.register_action(EnableChannel)
+        for r in get_api_resources():
+            self.register_api_resource(r)
 
     def exit(self):
         self.tc.close()
 
-    def enable(self, channel):
+    def enable(self, channel, tc_type=None, units=None):
         self.tc.enable(channel)
 
     def _timer_func(self):
@@ -54,6 +59,9 @@ class EntropyPicoTc08(Module):
 
 
 class ThermoCouples(object):
+
+    MAX_CHANNEL_NUMBER = 8
+
     def __init__(self, channels=list(range(9)), units=UNITS.TEMPERATURE.KELVIN,
                  tc_type=THERMOCOUPLES.T):
         self.channels = channels
@@ -74,6 +82,9 @@ class ThermoCouples(object):
         ch.addAnalogModifier(UnitsModifier(units or self._units))
 
     def enable(self, channel, tc_type=None, units=None):
+        if channel > self.MAX_CHANNEL_NUMBER:
+            raise Exception("Allowed channels are 0-{0}".format(self.MAX_CHANNEL_NUMBER))
+
         if channel not in self.channels:
             self.channels.append(channel)
             self.channels.sort()
@@ -85,7 +96,10 @@ class ThermoCouples(object):
 
     def get_value(self, channel):
         tc = self.tc_factory.getModule(channel)
-        return tc.getSingleValue()
+        return {'ts_utc': get_utc_ts(),
+                'value': tc.getSingleValue(),
+                'units': tc.getUnitsStr(),
+                'tc_type': tc.getTypeStr()}
 
     def close(self):
         self.tc_ctrlr.close()
