@@ -1,0 +1,2 @@
+recursive-include s_pico_tc08/web/templates *
+recursive-include s_pico_tc08/web/bp_static *

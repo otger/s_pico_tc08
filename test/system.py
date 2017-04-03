@@ -52,6 +52,14 @@ if __name__ == "__main__":
     server.start()
 
 
+    @app.errorhandler(Exception)
+    def all_exception_handler(error):
+        log.exception('Whatever exception')
+
+    @app.errorhandler(404)
+    def handle_bad_request(e):
+        log.exception('Whatever exception')
+
     def list_routes():
         import urllib
         output = []
@@ -77,18 +85,18 @@ if __name__ == "__main__":
     s = SystemTC08(flask_app=app)
     print(app.url_map)
 
-    log.info('Created system')
-    r = s.activate_timer(2)
-    r.wait_answer()
-    log.info("Sum('a', 'b') returned: {0}".format(r.return_value))
-    s.list_functionality()
-
-    time.sleep(10)
-    r = s.stop_timer()
-    log.info('Asked stop timer')
-    r.wait_answer()
-
-    time.sleep(5)
+    # log.info('Created system')
+    # r = s.activate_timer(2)
+    # r.wait_answer()
+    # log.info("Sum('a', 'b') returned: {0}".format(r.return_value))
+    # s.list_functionality()
+    #
+    # time.sleep(10)
+    # r = s.stop_timer()
+    # log.info('Asked stop timer')
+    # r.wait_answer()
+    #
+    # time.sleep(5)
 
     # list_routes()
     try:

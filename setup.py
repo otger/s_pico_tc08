@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 # Read README and CHANGES files for the long description
 here = os.path.abspath(os.path.dirname(__file__))
-README  = open(os.path.join(here, 'README.md')).read()
+README = open(os.path.join(here, 'README.md')).read()
 PACKAGEFULLNAME = 's_pico_tc08'
 PACKAGENAME = 's_pico_tc08'
 DESCRIPTION = 'Module to use a picotech tc08 in an entropy system'
@@ -40,7 +40,7 @@ setup(
                    "Development Status :: 4 - Beta",
                    "Programming Language :: Python",
                   ],
-      #ata=True,
+      include_package_data=True,
       packages=find_packages()
     #zip_safe=True,
 )

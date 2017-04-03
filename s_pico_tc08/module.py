@@ -10,7 +10,7 @@ from PicoController.common.definitions import MODULES_AVAILABLE
 
 from .actions import StartTempLoop, EnableChannel, StopTempLoop
 from .web.api.resources import get_api_resources
-
+from .web.blueprints import get_blueprint
 """
 module
 Created by otger on 23/03/17.
@@ -20,6 +20,7 @@ All rights reserved.
 
 class EntropyPicoTc08(Module):
     name = 'picotc08'
+    description = "Picotech TC08 thermocouples controller entropy module"
 
     def __init__(self, name=None, channels=list(range(9))):
         Module.__init__(self, name=name)
@@ -30,6 +31,7 @@ class EntropyPicoTc08(Module):
         self.register_action(StartTempLoop)
         self.register_action(StopTempLoop)
         self.register_action(EnableChannel)
+        self.register_blueprint(get_blueprint(self.name))
         for r in get_api_resources():
             self.register_api_resource(r)
 
