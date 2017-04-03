@@ -9,10 +9,9 @@ __author__ = 'otger'
 
 
 def get_blueprint(mod_name):
-
     simple_page = EntropyBlueprint('adder', __name__,
-                            template_folder='templates',
-                            url_prefix='/{0}'.format(mod_name))
+                                   template_folder='templates',
+                                   url_prefix='/{0}'.format(mod_name))
 
     @simple_page.route('/')
     def show():
