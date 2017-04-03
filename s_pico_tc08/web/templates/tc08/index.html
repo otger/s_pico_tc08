@@ -1,4 +1,39 @@
 {% extends "sys/base.html" %}
+{% block scripts %}
+    <script>
+    function getCard(channel, value, type, units, ts){
+        var d = moment.utc(ts*1000);
+        var html = '<div class="card-block col-md-4" id="get_temp_result_'+channel+'">';
+        html += '<div class="card card-inverse card-primary">';
+        html += '<h4 class="card-title">'+channel+'</h4>';
+        html += '<h1 class="card-text">'+parseFloat(value).toFixed(2)+'<small class="text-muted">'+units.charAt(0)+'</p>';
+        html += '<p class="card-text"><small class="text-muted">' + d.format('HH:mm:ss')+' UTC</small></p>';
+        html += '</div>';
+        return html;
+    }
+    $(document).ready(function(){
+      $("#get_temperatures_button").click(function(e){
+          e.preventDefault();
+          data = { }
+        $.ajax({type: "GET",
+                url: "/api/{{ module.name }}/read_channels",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify(data),
+                dataType: "json",
+                success:function(result){
+                    console.log(result);
+                    var container = $("#get_temperatures_results");
+                    container.empty();
+                    for (var key in result) {
+                        var el = result[key];
+                        container.append(getCard(key, el["value"], el["tc_type"], el["units"], el["ts_utc"]));
+                    };
+
+                }});
+      });
+    });
+    </script>
+{% endblock %}
 {% block main %}
         <div class="col-md-9 col-lg-10 main">
 
@@ -10,5 +45,21 @@
             <h1 class="display-1 hidden-xs-down">
             {{ mod_name }}
             </h1>
+
         </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-12"><h2>Get Temperatures</h2></div>
+        </div>
+        <div class="row" id="get_temperatures_results">
+
+        </div>
+        <div class="row">
+            <form>
+                <button type="submit" class="btn btn-primary" id="get_temperatures_button">Get Temperatures</button>
+            </form>
+        </div>
+
+
+    </div>
 {% endblock %}
