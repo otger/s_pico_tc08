@@ -3,11 +3,11 @@
     <script>
     function getCard(channel, value, type, units, ts){
         var d = moment.utc(ts*1000);
-        var html = '<div class="card-block col-md-4" id="get_temp_result_'+channel+'">';
-        html += '<div class="card card-inverse card-primary">';
-        html += '<h4 class="card-title">'+channel+'</h4>';
-        html += '<h1 class="card-text">'+parseFloat(value).toFixed(2)+'<small class="text-muted">'+units.charAt(0)+'</p>';
-        html += '<p class="card-text"><small class="text-muted">' + d.format('HH:mm:ss')+' UTC</small></p>';
+        var html = '<div class="col-xs-12 col-md-3 col-lg-2 small_pad" id="get_temp_result_'+channel+'">';
+        html += '<div class="mycard temperature">';
+        html += '<div><p class="small-text">'+channel+'</p></div>';
+        html += '<div class="text-right"><h1>'+parseFloat(value).toFixed(2)+'<small>'+units.charAt(0)+'</small></h1></div>';
+        html += '<div><small>' + d.format('HH:mm:ss')+' UTC</small></div>';
         html += '</div>';
         return html;
     }
