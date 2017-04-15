@@ -11,9 +11,7 @@
         html += '</div>';
         return html;
     }
-    function sleep(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    };
+
     function update_temperatures(){
           data = { }
         $.ajax({type: "GET",
@@ -40,28 +38,95 @@
       });
 
     $(document).ready(function(){
-      $("#enable_channel").click(function(e){
+      $("#configure_channel").click(function(e){
           e.preventDefault();
           data = { }
-          data['channel'] = $( "select#channel_number option:checked" ).val();
-          data['tc_type'] = $( "select#channel_type option:checked" ).val();
-          data['units'] = $( "select#channel_units option:checked" ).val();
-          console.log(data);
-        $.ajax({type: "POST",
-                url: "/api/{{ module.name }}/enable_channel",
-                contentType: "application/json; charset=UTF-8",
-                data: JSON.stringify(data),
-                dataType: "json",
-                success:function(result){
-                    console.log(result);
-                    // Todo: add feedback of execution
-                }});
-        sleep(1000).then(() => {
-            // Do something after the sleep!
-        });
-        update_temperatures();
+          var selected_channels = $( "select#channel_number" ).val();
+          console.log(selected_channels);
+          if(selected_channels){
+              selected_channels.forEach(function(ch){
+                  data['channel'] = ch;
+                  data['tc_type'] = $( "select#channel_type option:checked" ).val();
+                  data['units'] = $( "select#channel_units option:checked" ).val();
+                  console.log(data);
+                  $.ajax({type: "POST",
+                          url: "/api/{{ module.name }}/enable_channel",
+                          contentType: "application/json; charset=UTF-8",
+                          data: JSON.stringify(data),
+                          dataType: "json",
+                          success:function(result){
+                              console.log(result);
+                              // Todo: add feedback of execution
+                          }});
+                  // update_temperatures(); -- disabled because it always returns 0
+              });
+          }
       });
     });
+
+    $(document).ready(function(){
+      $("#disable_channel").click(function(e){
+          e.preventDefault();
+          data = { }
+          var selected_channels = $("select#dis_channel_number").val();
+          console.log(selected_channels);
+          if(selected_channels){
+              selected_channels.forEach(function(ch){
+                  data['channel'] = ch;
+                  console.log(data);
+                $.ajax({type: "POST",
+                        url: "/api/{{ module.name }}/disable_channel",
+                        contentType: "application/json; charset=UTF-8",
+                        data: JSON.stringify(data),
+                        dataType: "json",
+                        success:function(result){
+                            console.log(result);
+                            // Todo: add feedback of execution
+                        }});
+                // update_temperatures(); -- disabled because it always returns 0
+              });
+          }
+        });
+    });
+
+    $(document).ready(function(){
+      $("#start_loop").click(function(e){
+          e.preventDefault();
+          data = { }
+          var interval_seconds = $("input#interval_seconds").val();
+          console.log(interval_seconds);
+          if(interval_seconds){
+              data['interval'] = interval_seconds;
+              console.log(data);
+              $.ajax({type: "POST",
+                    url: "/api/{{ module.name }}/start_temp_loop",
+                    contentType: "application/json; charset=UTF-8",
+                    data: JSON.stringify(data),
+                    dataType: "json",
+                    success:function(result){
+                      console.log(result);
+                      // Todo: add feedback of execution
+                    }});
+          }
+        });
+    });
+
+    $(document).ready(function(){
+      $("#stop_loop").click(function(e){
+          e.preventDefault();
+          data = { }
+              $.ajax({type: "POST",
+                    url: "/api/{{ module.name }}/stop_temp_loop",
+                    contentType: "application/json; charset=UTF-8",
+                    data: JSON.stringify(data),
+                    dataType: "json",
+                    success:function(result){
+                      console.log(result);
+                      // Todo: add feedback of execution
+                    }});
+        });
+    });
+
     </script>
 {% endblock %}
 {% block main %}
@@ -80,15 +145,15 @@
         </div>
         <hr>
         <div class="row">
-            <div class="col-12"><h2>Enable Channel</h2></div>
+            <div class="col-12"><h2>Configure Channels</h2></div>
         </div>
         <div class="row">
             <form>
                 <div class="form-group row">
-                    <label for="channel_number" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Select Channel</label>
+                    <label for="channel_number" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Select Channels</label>
                     <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
-                        <select class="form-control" id="channel_number">
-                            <option value="0" selected="selected">Channel 0</option>
+                        <select multiple="true" class="form-control" style="overflow: scroll" id="channel_number">
+                            <option value="0">Channel 0</option>
                             <option value="1">Channel 1</option>
                             <option value="2">Channel 2</option>
                             <option value="3">Channel 3</option>
@@ -126,10 +191,51 @@
                         </select>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" id="enable_channel">Enable Channel</button>
+                <button type="submit" class="btn btn-primary" id="configure_channel">Configure Channels</button>
+            </form>
+        </div>
+        <hr>
+        <div class="row">
+            <div class="col-12"><h2>Disable Channels</h2></div>
+        </div>
+        <div class="row">
+            <form>
+                <div class="form-group row">
+                    <label for="dis_channel_number" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Select Channels</label>
+                    <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
+                        <select multiple class="form-control" style="overflow: scroll" id="dis_channel_number">
+                            <option value="0">Channel 0</option>
+                            <option value="1">Channel 1</option>
+                            <option value="2">Channel 2</option>
+                            <option value="3">Channel 3</option>
+                            <option value="4">Channel 4</option>
+                            <option value="5">Channel 5</option>
+                            <option value="6">Channel 6</option>
+                            <option value="7">Channel 7</option>
+                            <option value="8">Channel 8</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="disable_channel">Disable Channel</button>
             </form>
         </div>
 
+        <hr>
+        <div class="row">
+            <div class="col-12"><h2>Background loop acquisition</h2></div>
+        </div>
+        <div class="row">
+            <form>
+                <div class="form-group row">
+                    <label for="interval_seconds" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Interval (seconds)</label>
+                    <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
+                        <input class="form-control" type="number" value="5" id="interval_seconds">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="start_loop">Start loop</button>
+                <button type="submit" class="btn btn-primary" id="stop_loop">Stop loop</button>
+            </form>
+        </div>
 
 
 
