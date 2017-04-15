@@ -5,7 +5,7 @@ from flask import jsonify
 from flask_restful import reqparse
 from entropyfw.common import get_utc_ts
 from PicoController.common.definitions import THERMOCOUPLES, UNITS
-
+from .logger import log
 """
 resources
 Created by otger on 29/03/17.
@@ -45,8 +45,8 @@ class StopTempLoop(ModuleResource):
                         'result': 'done'})
 
 
-TC_TYPES = ('B', 'E', 'J', 'K', 'N', 'R', 'S', 'T')
-T_UNITS = ('Centigrade', 'Fahrenheit', 'Kelvin', 'Rankine')
+TC_TYPES = ('B', 'E', 'J', 'K', 'N', 'R', 'S', 'T')  # if modified, update web template
+T_UNITS = ('Centigrade', 'Fahrenheit', 'Kelvin', 'Rankine')  # if modified, update web template
 
 
 class EnableChannel(ModuleResource):
@@ -74,8 +74,10 @@ class EnableChannel(ModuleResource):
         units = args.get('units')
         if units:
             units = getattr(UNITS.TEMPERATURE, units.upper())
-
-        self.module.enable(args['channel'], tc_type=tc_type, units=units)
+        try:
+            self.module.enable(args['channel'], tc_type=tc_type, units=units)
+        except Exception as ex:
+            log.exception('Something went wrong when enabling module with arguments: {0}'.format(args))
 
         return jsonify({'args': args,
                         'utc_ts': get_utc_ts(),

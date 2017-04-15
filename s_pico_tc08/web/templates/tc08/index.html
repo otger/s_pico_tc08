@@ -3,7 +3,7 @@
     <script>
     function getCard(channel, value, type, units, ts){
         var d = moment.utc(ts*1000);
-        var html = '<div class="col-xs-12 col-md-3 col-lg-2 small_pad" id="get_temp_result_'+channel+'">';
+        var html = '<div class="col-xs-12 col-md-4 col-lg-3 small_pad" id="get_temp_result_'+channel+'">';
         html += '<div class="mycard temperature">';
         html += '<div><p class="small-text">'+channel+'</p></div>';
         html += '<div class="text-right"><h1>'+parseFloat(value).toFixed(2)+'<small>'+units.charAt(0)+'</small></h1></div>';
@@ -11,9 +11,10 @@
         html += '</div>';
         return html;
     }
-    $(document).ready(function(){
-      $("#get_temperatures_button").click(function(e){
-          e.preventDefault();
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    };
+    function update_temperatures(){
           data = { }
         $.ajax({type: "GET",
                 url: "/api/{{ module.name }}/read_channels",
@@ -30,35 +31,106 @@
                     };
 
                 }});
+        };
+
+    $(document).ready(function(){
+      $("#get_temperatures_button").click(function(e){
+        e.preventDefault();
+        update_temperatures()});
+      });
+
+    $(document).ready(function(){
+      $("#enable_channel").click(function(e){
+          e.preventDefault();
+          data = { }
+          data['channel'] = $( "select#channel_number option:checked" ).val();
+          data['tc_type'] = $( "select#channel_type option:checked" ).val();
+          data['units'] = $( "select#channel_units option:checked" ).val();
+          console.log(data);
+        $.ajax({type: "POST",
+                url: "/api/{{ module.name }}/enable_channel",
+                contentType: "application/json; charset=UTF-8",
+                data: JSON.stringify(data),
+                dataType: "json",
+                success:function(result){
+                    console.log(result);
+                    // Todo: add feedback of execution
+                }});
+        sleep(1000).then(() => {
+            // Do something after the sleep!
+        });
+        update_temperatures();
       });
     });
     </script>
 {% endblock %}
 {% block main %}
-        <div class="col-md-9 col-lg-10 main">
+    <h1 class="hidden-xs-down"> PicoTech TC08 controller</h1>
 
-            <!--toggle sidebar button-->
-            <p class="hidden-md-up">
-                <button type="button" class="btn btn-primary-outline btn-sm" data-toggle="offcanvas"><i class="fa fa-chevron-left"></i> Menu</button>
-            </p>
-
-            <h1 class="display-1 hidden-xs-down">
-            {{ mod_name }}
-            </h1>
-
-        </div>
     <div class="container">
         <div class="row">
             <div class="col-12"><h2>Get Temperatures</h2></div>
         </div>
         <div class="row" id="get_temperatures_results">
-
         </div>
         <div class="row">
             <form>
                 <button type="submit" class="btn btn-primary" id="get_temperatures_button">Get Temperatures</button>
             </form>
         </div>
+        <hr>
+        <div class="row">
+            <div class="col-12"><h2>Enable Channel</h2></div>
+        </div>
+        <div class="row">
+            <form>
+                <div class="form-group row">
+                    <label for="channel_number" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Select Channel</label>
+                    <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
+                        <select class="form-control" id="channel_number">
+                            <option value="0" selected="selected">Channel 0</option>
+                            <option value="1">Channel 1</option>
+                            <option value="2">Channel 2</option>
+                            <option value="3">Channel 3</option>
+                            <option value="4">Channel 4</option>
+                            <option value="5">Channel 5</option>
+                            <option value="6">Channel 6</option>
+                            <option value="7">Channel 7</option>
+                            <option value="8">Channel 8</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="channel_type" class="col-xs-12 col-md-3 col-lg-2 col-form-label">Channel Type</label>
+                    <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
+                        <select class="form-control" id="channel_type">
+                            <option value="B">B</option>
+                            <option value="E">E</option>
+                            <option value="J">J</option>
+                            <option value="K">K</option>
+                            <option value="N">N</option>
+                            <option value="R">R</option>
+                            <option value="S">S</option>
+                            <option value="T" selected="selected">T</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group row">
+                    <label for="channel_units"  class="col-xs-12 col-md-3 col-lg-2 col-form-label">Temperature Units</label>
+                    <div class="col-xs-12 col-md-6 col-lg-4 col-form-label">
+                        <select class="form-control" id="channel_units">
+                            <option value="Centigrade">Centigrade</option>
+                            <option value="Fahrenheit">Fahrenheit</option>
+                            <option value="Kelvin" selected="selected">Kelvin</option>
+                            <option value="Rankine">Rankine</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary" id="enable_channel">Enable Channel</button>
+            </form>
+        </div>
+
+
 
 
     </div>
