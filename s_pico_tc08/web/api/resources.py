@@ -6,6 +6,7 @@ from flask_restful import reqparse
 from entropyfw.common import get_utc_ts
 from PicoController.common.definitions import THERMOCOUPLES, UNITS
 from .logger import log
+from s_pico_tc08 import T_UNITS, TC_TYPES
 """
 resources
 Created by otger on 29/03/17.
@@ -45,8 +46,6 @@ class StopTempLoop(ModuleResource):
                         'result': 'done'})
 
 
-TC_TYPES = ('B', 'E', 'J', 'K', 'N', 'R', 'S', 'T')  # if modified, update web template
-T_UNITS = ('Centigrade', 'Fahrenheit', 'Kelvin', 'Rankine')  # if modified, update web template
 
 
 class EnableChannel(ModuleResource):
