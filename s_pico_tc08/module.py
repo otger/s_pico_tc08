@@ -62,6 +62,10 @@ class EntropyPicoTc08(Module):
                 self._timer.cancel()
                 self._timer = None
 
+    def pub_status(self):
+        values = self.tc.get_status()
+        self.pub_event('status', values)
+
 
 class ThermoCouples(object):
 
@@ -99,12 +103,16 @@ class ThermoCouples(object):
         if channel in self.channels:
             self.channels.pop(self.channels.index(channel))
 
-    def get_value(self, channel):
+    def get_single_status(self, channel):
         tc = self.tc_factory.getModule(channel)
         return {'ts_utc': get_utc_ts(),
                 'value': tc.getSingleValue(),
                 'units': tc.getUnitsStr(),
                 'tc_type': tc.getTypeStr()}
+
+    def get_value(self, channel):
+        tc = self.tc_factory.getModule(channel)
+        return tc.getSingleValue()
 
     def close(self):
         self.tc_ctrlr.close()
@@ -117,5 +125,11 @@ class ThermoCouples(object):
         values = {}
         for x in self.channels:
             values['channel_{0}'.format(x)] = self.get_value(x)
+        return values
+
+    def get_status(self):
+        values = {}
+        for x in self.channels:
+            values['channel_{0}'.format(x)] = self.get_single_status(x)
         return values
 

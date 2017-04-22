@@ -107,7 +107,7 @@ class ReadChannels(ModuleResource):
     description = "Reads all enabled channels and return its read values"
 
     def get(self):
-        return jsonify(self.module.tc.get_channels_values())
+        return jsonify(self.module.tc.get_status())
 
 
 def get_api_resources():

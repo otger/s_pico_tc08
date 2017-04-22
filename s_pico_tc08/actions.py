@@ -33,10 +33,12 @@ class StopTempLoop(Action):
 
 class EnableChannel(Action):
     name = 'enable_channel'
-    arguments = [('channel', int)]
+    arguments = [('channel', int), ('tc_type', str), ('units', str)]
     description = "Enables a channel of TC08"
     version = "0.1"
 
     def functionality(self):
         channel = int(self.get_arg('channel'))
-        self.module.enable(channel)
+        tc_type = self.get_arg('tc_type') or 'T'
+        units = self.get_arg('units') or 'Kelvin'
+        self.module.enable(channel, tc_type, units)
