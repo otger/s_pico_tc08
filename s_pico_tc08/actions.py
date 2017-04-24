@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
+from .logger import log
 """
 actions
 Created by otger on 23/03/17.
@@ -38,7 +38,11 @@ class EnableChannel(Action):
     version = "0.1"
 
     def functionality(self):
-        channel = int(self.get_arg('channel'))
-        tc_type = self.get_arg('tc_type') or 'T'
-        units = self.get_arg('units') or 'Kelvin'
-        self.module.enable(channel, tc_type, units)
+        try:
+            channel = int(self.get_arg('channel'))
+            tc_type = self.get_arg('tc_type')
+            units = self.get_arg('units')
+
+            self.module.enable(channel, tc_type, units)
+        except:
+            log.exception('Exception when enabling channel. Request: {}'.format(self.request.get_as_dict()))
