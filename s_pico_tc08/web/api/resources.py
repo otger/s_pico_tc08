@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-from entropyfw.api.rest import ModuleResource
+from entropyfw.api.rest import ModuleResource, REST_STATUS
 from flask import jsonify
 from flask_restful import reqparse
 from entropyfw.common import get_utc_ts
@@ -25,11 +25,13 @@ class StartTempLoop(ModuleResource):
 
     def post(self):
         args = self.reqparse.parse_args()
-        self.module.start_timer(args['interval'])
-
-        return jsonify({'args': args,
-                        'utc_ts': get_utc_ts(),
-                        'result': 'done'})
+        try:
+            self.module.start_timer(args['interval'])
+        except Exception as ex:
+            log.exception('Exception when starting status publication loop')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex), args=args)
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None, args=args)
 
 
 class StopTempLoop(ModuleResource):
@@ -40,12 +42,13 @@ class StopTempLoop(ModuleResource):
         super(StopTempLoop, self).__init__(module)
 
     def post(self):
-        self.module.stop_timer()
-
-        return jsonify({'utc_ts': get_utc_ts(),
-                        'result': 'done'})
-
-
+        try:
+            self.module.stop_timer()
+        except Exception as ex:
+            log.exception('Exception when stopping status publication loop')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex))
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None)
 
 
 class EnableChannel(ModuleResource):
@@ -76,11 +79,10 @@ class EnableChannel(ModuleResource):
         try:
             self.module.enable(args['channel'], tc_type=tc_type, units=units)
         except Exception as ex:
-            log.exception('Something went wrong when enabling module with arguments: {0}'.format(args))
-
-        return jsonify({'args': args,
-                        'utc_ts': get_utc_ts(),
-                        'result': 'done'})
+            log.exception('Something went wrong when enabling channel with arguments: {0}'.format(args))
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex), args=args)
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None, args=args)
 
 
 class DisableChannel(ModuleResource):
@@ -95,11 +97,13 @@ class DisableChannel(ModuleResource):
     def post(self):
         args = self.reqparse.parse_args()
 
-        self.module.disable(args['channel'])
-
-        return jsonify({'args': args,
-                        'utc_ts': get_utc_ts(),
-                        'result': 'done'})
+        try:
+            self.module.disable(args['channel'])
+        except Exception as ex:
+            log.exception('Something went wrong when disabling channel with arguments: {0}'.format(args))
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex), args=args)
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None, args=args)
 
 
 class ReadChannels(ModuleResource):
@@ -107,7 +111,13 @@ class ReadChannels(ModuleResource):
     description = "Reads all enabled channels and return its read values"
 
     def get(self):
-        return jsonify(self.module.tc.get_status())
+        try:
+            values = self.module.tc.get_status()
+        except Exception as ex:
+            log.exception('Something went wrong when reading status')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex))
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=values)
 
 
 def get_api_resources():
