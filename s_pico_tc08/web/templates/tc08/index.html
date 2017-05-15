@@ -23,8 +23,9 @@
                     console.log(result);
                     var container = $("#get_temperatures_results");
                     container.empty();
-                    for (var key in result) {
-                        var el = result[key];
+                    var channels = result["result"];
+                    for (var key in channels) {
+                        var el = channels[key];
                         container.append(getCard(key, el["value"], el["tc_type"], el["units"], el["ts_utc"]));
                     };
 
