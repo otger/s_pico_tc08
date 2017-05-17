@@ -37,6 +37,7 @@ class EntropyPicoTc08(Module):
             self.register_api_resource(r)
 
     def exit(self):
+        self.stop_timer()
         self.tc.close()
 
     def enable(self, channel, tc_type=None, units=None):
