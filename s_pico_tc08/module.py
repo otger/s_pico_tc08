@@ -11,6 +11,7 @@ from PicoController.common.definitions import MODULES_AVAILABLE
 from .actions import StartTempLoop, EnableChannel, StopTempLoop
 from .web.api.resources import get_api_resources
 from .web.blueprints import get_blueprint
+from .logger import log
 """
 module
 Created by otger on 23/03/17.
@@ -44,6 +45,10 @@ class EntropyPicoTc08(Module):
     def disable(self, channel):
         self.tc.disable(channel)
 
+    def disconnect(self):
+        self.stop_timer()
+        self.tc.disconnect()
+
     def _timer_func(self):
         values = self.tc.get_channels_values()
         self.pub_event('temperatures', values)
@@ -71,11 +76,14 @@ class ThermoCouples(object):
 
     MAX_CHANNEL_NUMBER = 8
 
-    def __init__(self, channels=list(range(9)), units=UNITS.TEMPERATURE.KELVIN,
+    def __init__(self, channels=[], units=UNITS.TEMPERATURE.KELVIN,
                  tc_type=THERMOCOUPLES.T):
         self.channels = channels
         self._units = units
         self._tc_type = tc_type
+        self._init_ctrlr()
+
+    def _init_ctrlr(self):
         self.tc_ctrlr = ControllerTC08()
         self.tc_ctrlr.connect()
         self.tc_factory = self.tc_ctrlr.getModuleFactory(MODULES_AVAILABLE.ANALOG_INPUT)
@@ -89,6 +97,20 @@ class ThermoCouples(object):
         ch = self.tc_factory.getModule(channel)
         ch.addAnalogModifier(ThermoCoupleModifier(tc_type or self._tc_type))
         ch.addAnalogModifier(UnitsModifier(units or self._units))
+
+    def _get_info(self):
+        info = self.tc_ctrlr.getInfo()
+        tmp = {k: info[k].decode('utf-8') for k in info}
+        return tmp
+    info = property(_get_info)
+
+    def connect(self):
+        if self.tc_ctrlr.isConnected():
+            raise Exception("Controller is already connected")
+        self.tc_ctrlr.connect()
+
+    def disconnect(self):
+        self.tc_ctrlr.close()
 
     def enable(self, channel, tc_type=None, units=None):
         if channel > self.MAX_CHANNEL_NUMBER:
@@ -108,7 +130,8 @@ class ThermoCouples(object):
         return {'ts_utc': get_utc_ts(),
                 'value': tc.getSingleValue(),
                 'units': tc.getUnitsStr(),
-                'tc_type': tc.getTypeStr()}
+                'tc_type': tc.getTypeStr(),
+                'poll interval': tc.getProperties().pollinterval}
 
     def get_value(self, channel):
         tc = self.tc_factory.getModule(channel)

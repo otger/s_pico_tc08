@@ -1,19 +1,19 @@
 {% extends "sys/base.html" %}
 {% block scripts %}
     <script>
-    function getCard(channel, value, type, units, ts){
+    function getCard(channel, value, type, units, ts, poll_interval){
         var d = moment.utc(ts*1000);
         var html = '<div class="col-xs-12 col-md-4 col-lg-3 small_pad" id="get_temp_result_'+channel+'">';
         html += '<div class="mycard temperature">';
         html += '<div><p class="small-text">'+channel+'</p></div>';
         html += '<div class="text-right"><h1>'+parseFloat(value).toFixed(2)+'<small>'+units.charAt(0)+'</small></h1></div>';
-        html += '<div><small>' + d.format('HH:mm:ss')+' UTC</small></div>';
+        html += '<div><small>' + d.format('HH:mm:ss')+' UTC</small><small class="pull-right">' + poll_interval+ '</small></div>';
         html += '</div>';
         return html;
     }
 
     function update_temperatures(){
-          data = { }
+        data = { }
         $.ajax({type: "GET",
                 url: "/api/{{ module.name }}/read_channels",
                 contentType: "application/json; charset=UTF-8",
@@ -21,15 +21,25 @@
                 dataType: "json",
                 success:function(result){
                     console.log(result);
-                    var container = $("#get_temperatures_results");
-                    container.empty();
-                    var channels = result["result"];
-                    for (var key in channels) {
-                        var el = channels[key];
-                        container.append(getCard(key, el["value"], el["tc_type"], el["units"], el["ts_utc"]));
-                    };
+                    if (result['status'] == 'Error'){
+                      showAlert(result['result'], 'Error');
+                    }else{
+                        // showAlert("Registered event", 'Success');
+                        var container = $("#get_temperatures_results");
+                        container.empty();
+                        var channels = result["result"];
+                        for (var key in channels) {
+                            var el = channels[key];
+                            container.append(getCard(key, el["value"], el["tc_type"], el["units"], el["ts_utc"], el["poll interval"]));
+                        };
+                    }
+                },
+                error:function(result){
+                    console.log(result);
+                    showAlert("An error happened", 'Error');
+                },
 
-                }});
+                });
         };
 
     $(document).ready(function(){
@@ -57,9 +67,18 @@
                           dataType: "json",
                           success:function(result){
                               console.log(result);
-                              // Todo: add feedback of execution
-                          }});
-                  // update_temperatures(); -- disabled because it always returns 0
+                              if (result['status'] == 'Error'){
+                                  showAlert(result['result'], 'Error');
+                              }else{
+                                  showAlert("Channel enabled", 'Success');
+                                  // update_temperatures(); -- disabled because it always returns 0
+                              }
+                          },
+                          error:function(result){
+                              console.log(result);
+                              showAlert("An error happened", 'Error');
+                          },
+                  });
               });
           }
       });
@@ -81,9 +100,19 @@
                         data: JSON.stringify(data),
                         dataType: "json",
                         success:function(result){
-                            console.log(result);
-                            // Todo: add feedback of execution
-                        }});
+                              console.log(result);
+                              if (result['status'] == 'Error'){
+                                  showAlert(result['result'], 'Error');
+                              }else{
+                                  showAlert("Channel enabled", 'Success');
+                                  // update_temperatures(); -- disabled because it always returns 0
+                              }
+                        },
+                        error:function(result){
+                              console.log(result);
+                              showAlert("An error happened", 'Error');
+                        },
+                });
                 // update_temperatures(); -- disabled because it always returns 0
               });
           }
@@ -105,9 +134,18 @@
                     data: JSON.stringify(data),
                     dataType: "json",
                     success:function(result){
-                      console.log(result);
-                      // Todo: add feedback of execution
-                    }});
+                        console.log(result);
+                        if (result['status'] == 'Error'){
+                            showAlert(result['result'], 'Error');
+                        }else{
+                            showAlert("Loop started", 'Success');
+                        }
+                    },
+                    error:function(result){
+                        console.log(result);
+                        showAlert("An error happened", 'Error');
+                    },
+              });
           }
         });
     });
@@ -122,9 +160,62 @@
                     data: JSON.stringify(data),
                     dataType: "json",
                     success:function(result){
-                      console.log(result);
-                      // Todo: add feedback of execution
-                    }});
+                        console.log(result);
+                        if (result['status'] == 'Error'){
+                            showAlert(result['result'], 'Error');
+                        }else{
+                            showAlert("Loop stopped", 'Success');
+                        }
+                    },
+                    error:function(result){
+                        console.log(result);
+                        showAlert("An error happened", 'Error');
+                    },
+
+            });
+        });
+    });
+
+    function getInfoCard(channel, value){
+        var html = '<div class="col-xs-12 col-md-4 col-lg-3 small_pad" id="get_temp_result_'+channel+'">';
+        html += '<div class="mycard info">';
+        html += '<div><p class="small-text">'+channel+'</p></div>';
+        html += '<div class="text-right"><h1>'+value+'</h1></div>';
+        html += '</div>';
+        return html;
+    }
+
+    $(document).ready(function(){
+      $("#get_info").click(function(e){
+          e.preventDefault();
+          data = { }
+              $.ajax({type: "GET",
+                    url: "/api/{{ module.name }}/get_controller_info",
+                    contentType: "application/json; charset=UTF-8",
+                    data: JSON.stringify(data),
+                    dataType: "json",
+                    success:function(result){
+                        console.log(result);
+                        if (result['status'] == 'Error'){
+                            showAlert(result['result'], 'Error');
+                        }else{
+                            var container = $("#show_tc_info");
+                            container.empty();
+                            var channels = result["result"];
+                            console.log(channels);
+                            for (var key in channels) {
+                                console.log(key);
+                                var el = channels[key];
+                                container.append(getInfoCard(key, el));
+                                console.log(container);
+                            };
+                        }
+                    },
+                    error:function(result){
+                        console.log(result);
+                        showAlert("An error happened", 'Error');
+                    },
+            });
         });
     });
 
@@ -237,6 +328,20 @@
                 <button type="submit" class="btn btn-primary" id="stop_loop">Stop loop</button>
             </form>
         </div>
+
+        <hr>
+        <div class="row">
+            <div class="col-12"><h2>Info</h2></div>
+        </div>
+        <div class="row">
+            <form>
+                <div class="row" id="show_tc_info">
+
+                </div>
+                <button type="submit" class="btn btn-primary" id="get_info">Get information</button>
+            </form>
+        </div>
+
 
 
 

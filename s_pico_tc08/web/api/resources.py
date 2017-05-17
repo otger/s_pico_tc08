@@ -120,5 +120,56 @@ class ReadChannels(ModuleResource):
             return self.jsonify_return(status=REST_STATUS.Done, result=values)
 
 
+class GetControllerInfo(ModuleResource):
+    url = 'get_controller_info'
+    description = "Get information provided by controller"
+
+    def get(self):
+        try:
+            values = self.module.tc.info
+            log.debug(values)
+        except Exception as ex:
+            log.exception('Something went wrong when reading info')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex))
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=values)
+
+
+class ConnectTC08(ModuleResource):
+    url = 'connect_controller'
+    description = "Connects to controller TC08"
+
+    def post(self):
+        try:
+            self.module.tc.connect()
+        except Exception as ex:
+            log.exception('Something went wrong when connecting')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex))
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None)
+
+
+class DisconnectTC08(ModuleResource):
+    url = 'disconnect_controller'
+    description = "Disconnects controller TC08"
+
+    def post(self):
+        try:
+            self.module.disconnect()
+        except Exception as ex:
+            log.exception('Something went wrong when connecting')
+            return self.jsonify_return(status=REST_STATUS.Error, result=str(ex))
+        else:
+            return self.jsonify_return(status=REST_STATUS.Done, result=None)
+
+
 def get_api_resources():
-    return [StartTempLoop, StopTempLoop, EnableChannel, DisableChannel, ReadChannels]
+    return [StartTempLoop,
+            StopTempLoop,
+            EnableChannel,
+            DisableChannel,
+            ReadChannels,
+            GetControllerInfo,
+            ConnectTC08,
+            DisconnectTC08,
+            ]
