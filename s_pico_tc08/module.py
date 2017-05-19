@@ -85,10 +85,12 @@ class ThermoCouples(object):
         self._init_ctrlr()
 
     def _init_ctrlr(self):
+        log.info("Initializing TC08 controller")
         self.tc_ctrlr = ControllerTC08()
         self.tc_ctrlr.connect()
         self.tc_factory = self.tc_ctrlr.getModuleFactory(MODULES_AVAILABLE.ANALOG_INPUT)
         self._config_channels()
+        log.info("Initialize done")
 
     def _config_channels(self):
         for channel in self.channels:
