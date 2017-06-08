@@ -51,8 +51,11 @@ class EntropyPicoTc08(Module):
         self.tc.disconnect()
 
     def _timer_func(self):
-        values = self.tc.get_channels_values()
-        self.pub_event('temperatures', values)
+        try:
+            values = self.tc.get_channels_values()
+            self.pub_event('temperatures', values)
+        except Exception:
+            log.exception("Error reading values")
         self._timer = threading.Timer(self.interval, self._timer_func)
         self._timer.start()
 
@@ -149,8 +152,14 @@ class ThermoCouples(object):
 
     def get_channels_values(self):
         values = {}
+        all_zeros = True
         for x in self.channels:
-            values['channel_{0}'.format(x)] = self.get_value(x)
+            v = self.get_value(x)
+            if v != 0:
+                all_zeros = False
+            values['channel_{0}'.format(x)] = v
+        if all_zeros:
+            raise Exception('All values were zero')
         return values
 
     def get_status(self):
